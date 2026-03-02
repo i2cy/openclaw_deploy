@@ -7,7 +7,18 @@ ENV PATH="/root/.bun/bin:${PATH}"
 RUN corepack enable
 
 WORKDIR /app
-RUN chown node:node /app
+RUN chown -Rh node:node /app && \
+      apt-get update && \
+      apt-get install -y sudo nano && \
+      echo "node ALL=(ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/node && sudo chmod 0440 /etc/sudoers.d/node && \
+      wget "https://golang.google.cn/dl/go1.23.12.linux-amd64.tar.gz" && \
+      tar --gzip -xf go1.23.12.linux-amd64.tar.gz -C /usr/lib && \
+      mv /usr/lib/go /usr/lib/go-1.23 && \
+      ln -sf /usr/lib/go-1.23/bin/go /usr/bin/go && \
+      ln -sf /usr/lib/go-1.23/bin/gofmt /usr/bin/gofmt && \
+      NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+ENV PATH="/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:${PATH}"
 
 ARG OPENCLAW_DOCKER_APT_PACKAGES=""
 RUN if [ -n "$OPENCLAW_DOCKER_APT_PACKAGES" ]; then \
@@ -62,7 +73,11 @@ RUN pnpm ui:build
 # Expose the CLI binary without requiring npm global writes as non-root.
 USER root
 RUN ln -sf /app/openclaw.mjs /usr/local/bin/openclaw \
- && chmod 755 /app/openclaw.mjs
+ && chmod 755 /app/openclaw.mjs && \
+ chown -Rh node /app && \
+ chown -Rh node /lib && \
+ chown -Rh node /lib64 && \
+ chown -Rh node /home/node
 
 ENV NODE_ENV=production
 
