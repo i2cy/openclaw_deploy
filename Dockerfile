@@ -122,7 +122,7 @@ RUN ln -sf /app/openclaw.mjs /usr/local/bin/openclaw \
  chown -Rh node /app && \
  chown -Rh node /lib && \
  chown -Rh node /lib64 && \
- chown -Rh node /home/node
+ chown -Rh node /home
 
 ENV NODE_ENV=production
 
