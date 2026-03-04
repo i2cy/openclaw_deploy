@@ -23,6 +23,9 @@ WORKDIR /app
 RUN chown -Rh node:node /app && \
       apt-get update && \
       apt-get install -y sudo nano && \
+      wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add - && \
+      echo "deb [arch=amd64] https://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list && \
+      apt-get update && apt-get install -y google-chrome-stable && \
       echo "node ALL=(ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/node && sudo chmod 0440 /etc/sudoers.d/node && \
       wget "https://golang.google.cn/dl/go1.23.12.linux-amd64.tar.gz" && \
       tar --gzip -xf go1.23.12.linux-amd64.tar.gz -C /usr/lib && \
