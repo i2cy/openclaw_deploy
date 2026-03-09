@@ -125,7 +125,23 @@ RUN --mount=type=cache,id=openclaw-bookworm-apt-cache,target=/var/cache/apt,shar
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
       procps hostname curl git openssl
 
-RUN chown node:node /app
+RUN chown node:node /app && \
+    apt-get update && \
+    apt-get install -y sudo nano && \
+    wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add - && \
+    echo "deb [arch=amd64] https://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list && \
+    apt-get update && apt-get install -y google-chrome-stable && \
+    echo "node ALL=(ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/node && sudo chmod 0440 /etc/sudoers.d/node && \
+    wget "https://golang.google.cn/dl/go1.23.12.linux-amd64.tar.gz" && \
+    tar --gzip -xf go1.23.12.linux-amd64.tar.gz -C /usr/lib && \
+    mv /usr/lib/go /usr/lib/go-1.23 && \
+    ln -sf /usr/lib/go-1.23/bin/go /usr/bin/go && \
+    ln -sf /usr/lib/go-1.23/bin/gofmt /usr/bin/gofmt && \
+    NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+ENV PATH="/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:${PATH}"
+
+
 
 COPY --from=runtime-assets --chown=node:node /app/dist ./dist
 COPY --from=runtime-assets --chown=node:node /app/node_modules ./node_modules
@@ -204,7 +220,12 @@ RUN --mount=type=cache,id=openclaw-bookworm-apt-cache,target=/var/cache/apt,shar
 
 # Expose the CLI binary without requiring npm global writes as non-root.
 RUN ln -sf /app/openclaw.mjs /usr/local/bin/openclaw \
- && chmod 755 /app/openclaw.mjs
+ && chmod 755 /app/openclaw.mjs && \
+ chown -Rh node /app && \
+ chown -Rh node /lib && \
+ chown -Rh node /lib64 && \
+ chown -Rh node /home && \
+ chown -Rh node /usr/local
 
 ENV NODE_ENV=production
 
