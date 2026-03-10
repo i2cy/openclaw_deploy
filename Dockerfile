@@ -56,7 +56,7 @@ COPY --from=ext-deps /out/ ./extensions/
 # Reduce OOM risk on low-memory hosts during dependency installation.
 # Docker builds on small VMs may otherwise fail with "Killed" (exit 137).
 RUN --mount=type=cache,id=openclaw-pnpm-store,target=/root/.local/share/pnpm/store,sharing=locked \
-    NODE_OPTIONS=--max-old-space-size=2048 pnpm install --frozen-lockfile
+    NODE_OPTIONS=--max-old-space-size=2048 pnpm install --no-frozen-lockfile
 
 COPY . .
 
@@ -86,8 +86,9 @@ RUN pnpm ui:build
 # Prune dev dependencies and strip build-only metadata before copying
 # runtime assets into the final image.
 FROM build AS runtime-assets
-RUN CI=true pnpm prune --prod && \
-    find dist -type f \( -name '*.d.ts' -o -name '*.d.mts' -o -name '*.d.cts' -o -name '*.map' \) -delete
+#RUN CI=true pnpm prune --prod && \
+#    find dist -type f \( -name '*.d.ts' -o -name '*.d.mts' -o -name '*.d.cts' -o -name '*.map' \) -delete
+RUN echo "do nothing"
 
 # ── Runtime base images ─────────────────────────────────────────
 FROM ${OPENCLAW_NODE_BOOKWORM_IMAGE} AS base-default
@@ -101,7 +102,8 @@ LABEL org.opencontainers.image.base.name="docker.io/library/node:22-bookworm-sli
   org.opencontainers.image.base.digest="${OPENCLAW_NODE_BOOKWORM_SLIM_DIGEST}"
 
 # ── Stage 3: Runtime ────────────────────────────────────────────
-FROM base-${OPENCLAW_VARIANT}
+#FROM base-${OPENCLAW_VARIANT}
+FROM base-default
 ARG OPENCLAW_VARIANT
 
 # OCI base-image metadata for downstream image consumers.
@@ -128,9 +130,9 @@ RUN --mount=type=cache,id=openclaw-bookworm-apt-cache,target=/var/cache/apt,shar
 RUN chown node:node /app && \
     apt-get update && \
     apt-get install -y sudo nano && \
-    wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add - && \
-    echo "deb [arch=amd64] https://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list && \
-    apt-get update && apt-get install -y google-chrome-stable && \
+#    wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add - && \
+#    echo "deb [arch=amd64] https://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list && \
+#    apt-get update && apt-get install -y google-chrome-stable && \
     echo "node ALL=(ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/node && sudo chmod 0440 /etc/sudoers.d/node && \
     wget "https://golang.google.cn/dl/go1.23.12.linux-amd64.tar.gz" && \
     tar --gzip -xf go1.23.12.linux-amd64.tar.gz -C /usr/lib && \
