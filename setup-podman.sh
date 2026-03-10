@@ -258,7 +258,7 @@ fi
 echo "Building image from $REPO_PATH..."
 BUILD_ARGS=()
 [[ -n "${OPENCLAW_DOCKER_APT_PACKAGES:-}" ]] && BUILD_ARGS+=(--build-arg "OPENCLAW_DOCKER_APT_PACKAGES=${OPENCLAW_DOCKER_APT_PACKAGES}")
-[[ -n "${OPENCLAW_EXTENSIONS:-}" ]] && BUILD_ARGS+=(--build-arg "OPENCLAW_EXTENSIONS=${OPENCLAW_EXTENSIONS}")
+[[ -n "${OPENCLAW_EXTENSIONS:-}" ]] && BUILD_ARGS+=(--build-arg "OPENCLAW_EXTENSIONS=${OPENCLAW_EXTENSIONS}") && BUILD_ARGS+=(--build-arg "OPENCLAW_INSTALL_BROWSER=1")
 podman build ${BUILD_ARGS[@]+"${BUILD_ARGS[@]}"} -t openclaw:local -f "$REPO_PATH/Dockerfile" "$REPO_PATH"
 
 echo "Loading image into $OPENCLAW_USER's Podman store..."
